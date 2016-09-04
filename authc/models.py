@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
-### from https://thinkster.io/django-angularjs-tutorial
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
-
 # Create your models here.
+
 class AccountManager(BaseUserManager):
     def create_user(self, email, password=None, **kwargs):
         if not email:
@@ -57,3 +57,4 @@ class Account(AbstractBaseUser):
 
     def get_short_name(self):
         return self.first_name
+
