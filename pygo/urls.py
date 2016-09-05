@@ -15,9 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from rest_framework import routers
+from authc import views
+router = routers.DefaultRouter()
+router.register(r'users', views.AccountViewSet)
 
 urlpatterns = [
     url(r'^polls/', include('polls.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^api/v1/', include('authc.urls'))
+    # url(r'^api/v1/', include('authc.urls')),
+    url(r'^authc/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^apis/', include('snippets.urls')),
 ]

@@ -44,15 +44,15 @@ class AccountViewSet(viewsets.ModelViewSet):
         }, status=400)
 
 
-@api_view(['GET', 'POST'])
-@parser_classes((JSONParser,))
-def authc(request):
-    seri = AccountSerializer
-    queryset =  Account.objects.all()
-    lookup_field = 'username'
-    if request.methode == 'GET':
-        return Response()
-
-    elif request.methode == 'POST':
-        return Response({'received data': request.data})
+# @api_view(['GET', 'POST'])
+# @parser_classes((JSONParser,))
+# def authc(request):
+#     seri = AccountSerializer
+#     queryset =  Account.objects.all()
+#     lookup_field = 'username'
+#     if request.methode == 'GET':
+#         return Response()
+#
+#     elif request.methode == 'POST':
+#         return Response({'received data': request.data})
 
