@@ -47,10 +47,12 @@ def vote(request, question_id):
         })
     else:
         selected_choice.votes += 100
-        question.choice_set.create(choice_text='auto added', votes=0)
+        # question.choice_set.create(choice_text='auto added', votes=0)
         selected_choice.save()
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
     return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
+
+
 
