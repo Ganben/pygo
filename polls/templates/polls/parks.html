@@ -1,0 +1,16 @@
+{% if parking_list %}
+    'please select an item 停车结帐'
+    <ul>
+
+        {% for parking in parking_list %}
+        <form action="{% url 'polls:endpark' parking.id %}" method="post">
+            {% csrf_token %}
+            <label>{{ parking.user }}</label><br />
+            <label>{{ parking.starttime }}</label><br />
+            <input type="submit" value="结束{{parking.user}}的停车" />
+        </form>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}

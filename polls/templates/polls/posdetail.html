@@ -1,0 +1,11 @@
+<h1>{{ position.name }}, Section {{position.section}}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'polls:dopark' position.id%}" method="post">
+{% csrf_token %}
+    <input type="radio" id="{{position.id}}" name="posid" value="{{ position.id }}" />
+    <input type="text" id="uid" value="" name="uid" >
+    <label>{{ position.name }}</label><br />
+<input type="submit" value="开始停车" />
+</form>
