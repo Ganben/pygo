@@ -1,10 +1,30 @@
+{% load staticfiles %}
+<html>
+    <head>
+    <title>停车收费哪家强</title>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+</head>
+    <body>
+    <div class="container">
+
+         <div class="page-header">
+        <h1>停车收费原型</h1>
+        </div>
 {% if position_list %}
     'please select a position to park'
-    <ul>
+        <div class="col-sm-4">
+    <ul class="list-group">
         {% for position in position_list %}
-        <li><a href="{% url 'polls:park' position.id %}">{{ position.name }}, Section {{ position.section}}</a></li>
+        <li class="list-group-item"><a href="{% url 'polls:park' position.id %}">{{ position.name }}, Section {{ position.section}}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No polls are available.</p>
 {% endif %}
+        </div>
+    </div>
+
+    </body>
+</html>
