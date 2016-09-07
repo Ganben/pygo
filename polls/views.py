@@ -8,6 +8,14 @@ from django.urls import reverse
 from django.utils import timezone
 # from django.template import loader
 from django.shortcuts import render, get_object_or_404
+#view class
+from django.views import generic
+
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
+
 
 def index(request):
     latest_question_list = Question.objects.order_by('-pub_date')[:5]

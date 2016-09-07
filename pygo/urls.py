@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^polls/', include('polls.urls')),
     url(r'^admin/', admin.site.urls),
     # url(r'^api/v1/', include('authc.urls')),
-    url(r'^authc/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^apis/', include('snippets.urls')),
+    # url(r'^authc/', include('rest_framework.urls', namespace='rest_framework')),
+    # url(r'^apis/', include('snippets.urls')),
+    url(r'^park/', include('park.urls')),
 ]
