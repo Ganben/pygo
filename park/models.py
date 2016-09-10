@@ -35,3 +35,9 @@ class Billing(models.Model):
 
     def __str__(self):
         return self.ticket
+
+class User(models.Model):
+    name = models.CharField(max_length=40)
+
+    def __str__(self):
+        return self.name

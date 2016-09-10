@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.views.generic import ListView
 from django.views import View
 from .models import Car
+from .views.forms import LoginForm
 # Create your views here.
 
 class IndexView(ListView):
@@ -23,7 +24,7 @@ class LoginView(View):
 
     def get(self, request, *args, **kwargs):
         #write some query
-        return render(request, 'form_template.html', {'form': form_class})
+        return render(request, 'login.html', {'form': self.form_class})
 
     def post(self, request, *args, **kwargs):
 

@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'park.apps.ParkConfig',
+    'park.apps.ParkConfig',
     'rest_framework',
     'snippets.apps.SnippetsConfig',
 ]
