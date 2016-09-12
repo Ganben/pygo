@@ -10,12 +10,12 @@ from .forms import SubmitForm
 class IndexView(View):
     initial = {'key': 'value'}
     template_name = 'index.html'
-    item_list = Item.objects.all()
+    # item_list = Item.objects.all()
     form_class = SubmitForm(initial={'number': 1})
 
     def get(self, request):
-
-        return render(request, 'index.html', {'form': self.form_class, 'item_list': self.item_list})
+        item_list = Item.objects.all()
+        return render(request, 'index.html', {'form': self.form_class, 'item_list': item_list})
 
     def post(self, request, *args, **kwargs):
         form=SubmitForm(request.POST)

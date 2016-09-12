@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
     <title>0203毕业10年聚会</title>
             <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
@@ -15,16 +16,15 @@
         <div class="weui_cells_title">0203武汉聚会已报名列表</div>
 
         {% if item_list %}
-        <ul>
-            <div class="weui_cells">
+        <ul class="weui_cells">
             {% for item in item_list %}
                 <li>
                 <div class="weui_cell">
                     <div class="weui_cell_bd weui_cell_primary">
                         <p>{{ item.name }}, {{ item.phone}}, {{item.number}}人:</p>
                     </div>
-                    {% if item.is1 %}
                     <div class="weui_cell_ft">
+                    {% if item.is1 %}
                         1号
                     {% endif %}
                     {% if item.is2 %}
@@ -33,11 +33,12 @@
                     {% if item.is3 %}
                         3号
                     {% endif %}
+
                     </div>
                 </div>
                 </li>
             {% endfor %}
-                </div>
+
         </ul>
 
 
@@ -55,16 +56,17 @@
     <div class="weui_cell">
         <div class="weui_cell_hd">
             {{form.phone.errors}}
-            <label for="id_phone" class="weui_label">手机</label>
+            <label for="{{form.phone.id_for_label}}" class="weui_label">手机</label>
         </div>
         <div class="weui_cell_bd weui_cell_primary">
             <input id="id_phone" name="phone" class="weui_input" type="tel" placeholder="老崔要你手机">
+            <!--{{form.phone}}-->
         </div>
         </div>
         <div class="weui_cell">
         <div class="weui_cell_hd">
             {{form.name.errors}}
-            <label for="id_name" class="weui_label">姓名</label>
+            <label for="{{ form.name.id_for_label }}" class="weui_label">姓名</label>
         </div>
                 <div class="weui_cell_bd weui_cell_primary">
             <input id="id_name" name="name" class="weui_input" type="text" placeholder="班长要你名字">
@@ -73,10 +75,10 @@
             <div class="weui_cell">
         <div class="weui_cell_hd">
             {{form.number.errors}}
-            <label for="id_number" class="weui_label">人数</label>
+            <label for="{{ form.number.id_for_label }}" class="weui_label">人数</label>
         </div>
                 <div class="weui_cell_bd weui_cell_primary">
-            <input id="id_number" name="number" class="weui_input" type="number" placeholder="余灯要你人数">
+            <input id="id_number" name="number" class="weui_input" type="tel" value="1" placeholder="余灯要你人数">
         </div>
 
         </div>
