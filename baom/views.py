@@ -14,7 +14,7 @@ class IndexView(View):
     form_class = SubmitForm(initial={'number': 1})
 
     def get(self, request):
-        item_list = Item.objects.all()
+        item_list = Item.objects.order_by('-pk')
         return render(request, 'index.html', {'form': self.form_class, 'item_list': item_list})
 
     def post(self, request, *args, **kwargs):
@@ -30,7 +30,7 @@ class IndexView(View):
                 number=form.cleaned_data['number'],
             )
 
-        item_list = Item.objects.all()
+        item_list = Item.objects.order_by('-pk')
 
         return render(request, 'index.html', {'form': self.form_class, 'item_list': item_list})
 
