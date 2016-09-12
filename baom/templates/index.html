@@ -1,0 +1,124 @@
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>0203毕业10年聚会</title>
+            <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.css">
+    <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.min.css">
+
+</head>
+<body>
+<div class="container">
+
+        <div class="weui_cells_title">0203武汉聚会已报名列表</div>
+
+        {% if item_list %}
+        <ul>
+            <div class="weui_cells">
+            {% for item in item_list %}
+                <li>
+                <div class="weui_cell">
+                    <div class="weui_cell_bd weui_cell_primary">
+                        <p>{{ item.name }}, {{ item.phone}}, {{item.number}}人:</p>
+                    </div>
+                    {% if item.is1 %}
+                    <div class="weui_cell_ft">
+                        1号
+                    {% endif %}
+                    {% if item.is2 %}
+                        2号
+                    {% endif %}
+                    {% if item.is3 %}
+                        3号
+                    {% endif %}
+                    </div>
+                </div>
+                </li>
+            {% endfor %}
+                </div>
+        </ul>
+
+
+    {% else %}
+    <p>还没人报名.</p>
+    {% endif %}
+
+
+    <div class="weui_cells_title">报名表单</div>
+    <div class="weui_cells weui_cells_form">
+            <form action="{% url 'baom:index' %}" method="post">
+        {% csrf_token %}
+                <!--{{ form.as_table }}-->
+                {{form.non_field_errors}}
+    <div class="weui_cell">
+        <div class="weui_cell_hd">
+            {{form.phone.errors}}
+            <label for="id_phone" class="weui_label">手机</label>
+        </div>
+        <div class="weui_cell_bd weui_cell_primary">
+            <input id="id_phone" name="phone" class="weui_input" type="tel" placeholder="老崔要你手机">
+        </div>
+        </div>
+        <div class="weui_cell">
+        <div class="weui_cell_hd">
+            {{form.name.errors}}
+            <label for="id_name" class="weui_label">姓名</label>
+        </div>
+                <div class="weui_cell_bd weui_cell_primary">
+            <input id="id_name" name="name" class="weui_input" type="text" placeholder="班长要你名字">
+        </div>
+            </div>
+            <div class="weui_cell">
+        <div class="weui_cell_hd">
+            {{form.number.errors}}
+            <label for="id_number" class="weui_label">人数</label>
+        </div>
+                <div class="weui_cell_bd weui_cell_primary">
+            <input id="id_number" name="number" class="weui_input" type="number" placeholder="余灯要你人数">
+        </div>
+
+        </div>
+        <div class="weui_cells_title">入住选择：</div>
+            <div class = "weui_cells weui_cells_checkbox">
+                {{form.is1.errors}}
+                <label class="weui_cell weui_check_label" for="id_is1">
+        <div class="weui_cell_hd">
+            <input type="checkbox" class="weui_check" id="id_is1" name="is1">
+            <i class="weui_icon_checked"></i>
+        </div>
+        <div class="weui_cell_bd weui_cell_primary">
+            <p>1号入住</p>
+        </div>
+                </label>
+            </div>
+        <div class = "weui_cells weui_cells_checkbox">
+                <label class="weui_cell weui_check_label" for="id_is2">
+        <div class="weui_cell_hd">
+            <input type="checkbox" class="weui_check"  id="id_is2" name="is2">
+            <i class="weui_icon_checked"></i>
+        </div>
+        <div class="weui_cell_bd weui_cell_primary">
+            <p>2号入住</p>
+        </div>
+                </label>
+            </div>
+        <div class = "weui_cells weui_cells_checkbox">
+                <label class="weui_cell weui_check_label" for="id_is3">
+        <div class="weui_cell_hd">
+            <input type="checkbox" class="weui_check" id="id_is3" name="is3">
+            <i class="weui_icon_checked"></i>
+        </div>
+        <div class="weui_cell_bd weui_cell_primary">
+            <p>3号入住</p>
+        </div>
+                </label>
+            </div>
+
+        <input class="weui_btn weui_btn_primary" type="submit" value="提交报名" />
+    </form>
+        </div>
+</div>
+</body>
+</html>
