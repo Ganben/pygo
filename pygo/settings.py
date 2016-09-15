@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'authc.apps.AuthcConfig',
     'baom.apps.BaomConfig',
     'polls.apps.PollsConfig',
     'django.contrib.admin',
@@ -42,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'park.apps.ParkConfig',
     'rest_framework',
-    'snippets.apps.SnippetsConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,12 +78,24 @@ WSGI_APPLICATION = 'pygo.wsgi.application'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 DATABASES = {
+    'normal': {},
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'public': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db2.sqlite3'),
     }
+    # 'publicpark': {
+    #     'NAME': 'park_record',
+    #     'ENGINE': 'django.db.backends.s'
+    #     'USER':
+    #     'PASSWORD':
+    # }
 }
 
+DATABASES_ROUTERS = ['park.routers.PublicRouter',]
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

@@ -33,7 +33,14 @@ class LoginView(View):
 
     def post(self, request, *args, **kwargs):
         form_class = LoginForm(request.POST)
-        return render(request, 'result.html')
+        username = 'none'
+        if form_class.is_valid():
+            username = form_class.cleaned_data['user_name']
+
+        #response.set_cookie('username', username)
+        request.session['logged'] = True
+        request.session['username'] = username
+        return  render(request, 'result.html', {'username': username})
 
 class PictureView(View):
     form_class = FileForm
