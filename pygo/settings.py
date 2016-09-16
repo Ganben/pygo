@@ -78,7 +78,6 @@ WSGI_APPLICATION = 'pygo.wsgi.application'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 DATABASES = {
-    'normal': {},
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
@@ -87,15 +86,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db2.sqlite3'),
     }
-    # 'publicpark': {
-    #     'NAME': 'park_record',
-    #     'ENGINE': 'django.db.backends.s'
-    #     'USER':
-    #     'PASSWORD':
-    # }
 }
 
-DATABASES_ROUTERS = ['park.routers.PublicRouter',]
+# DATABASES_ROUTERS = ['park.routers.PublicRouter',]
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

@@ -38,7 +38,8 @@ class Billing(models.Model):
 
 class User(models.Model):
     name = models.CharField(max_length=40)
-
+    openid = models.CharField(max_length=40, default=None)
+    domain = models.CharField(max_length=40, default='wechat')
     def __str__(self):
         return self.name
 
