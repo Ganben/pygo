@@ -3,6 +3,7 @@ from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform
+from .models import User, Pic
 # Create your views here.
 
 #here define the wechat api parameters.
@@ -20,6 +21,30 @@ class IndexView(View):
             return HttpResponseRedirect(WECHAT_URL)   #redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         else:
             #call a view to draw 2 picture to phodo
-        #TODO a common method to randon 2 picture and to fill a rate form;
-            r_id = 1 # auto generate r_id, = photo id , its rating times, pull another picture to compare with it.
-            return HttpResponseRedirect(reverse('phodo:rate', args=(r_id,)))
+            #r_id = 1 cancelled, let rate get auto generate # auto generate r_id, = photo id , its rating times, pull another picture to compare with it.
+            return HttpResponseRedirect(reverse('phodo:rate'))
+
+
+class RateView(View):
+    #this view is to render the pic1 and pic2 to be rated by clicking
+    #this page can get: generate random (none input) or given picture id (p_id)
+    def get(self, request, *args, **kwargs):
+        openid = request.session.get('openid', None)
+        if openid == None:
+            return HttpResponseRedirect(
+                WECHAT_URL)   #redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+        else:
+            #how to generate a random picture? its a auto updated list!
+            #right now i just use a last 3 picture, for sqlite pk +1 or -1, ordered_by - rated times.
+            list = Pic.objects.order_by('-rated')[:5]
+
+
+
+class PicRateView(View):
+    #this view generate a rate of specific picture
+    def get(self, request, pic_id, *args, **kwargs):
+        openid = request.session.get('openid', None)
+        if openid == None:
+            return HttpResponseRedirect(
+                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+        else:
