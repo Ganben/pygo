@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<form action="{% url 'phodo:rate' %}" method="post">
+    <ul>
+        {% for pic in field.choice %}
+        <li>
+            <input type="radio" value="{{ pic.id }}"><img src="{{pic.image.url}}" /> {{pic.user}}</input>
+        </li>
+        {% endfor %}
+    </ul>
+    <input type="submit" value="Confirm" />
+</form>
+</body>
+</html>

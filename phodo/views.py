@@ -1,9 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform
 from .models import User, Pic
+import random
 # Create your views here.
 
 #here define the wechat api parameters.
@@ -36,8 +37,28 @@ class RateView(View):
         else:
             #how to generate a random picture? its a auto updated list!
             #right now i just use a last 3 picture, for sqlite pk +1 or -1, ordered_by - rated times.
-            list = Pic.objects.order_by('-rated')[:5]
+            list = Pic.objects.order_by('-rated')[:20]
+            #random 2 in 20
+            n1 = random.randrange(0,18,2)
+            n2 = random.randrange(1,19,2)
+            pics = [
+                list[n1],
+                list[n2]
+            ]
+            #render page and return forms for rate
+            #form first and then fill with pic object.
+            form = Rform(pics[0])
+            form.fields['hidden_pic1'] = pics[0].id
+            form.fields['hidden_pic2'] = pics[1].id
+            #fill context with forms and other variables
+            context = {
+                'form': form
+            }
+            return render(request, 'rate.html', context)
 
+    def post(self, request, *args, **kwargs):
+        form = Rform(request.POST)
+        #here i will handle the posted form, first validate data, then calculate elo rate, then update to db.
 
 
 class PicRateView(View):
@@ -48,3 +69,23 @@ class PicRateView(View):
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         else:
+            item1 = get_object_or_404(Pic, pk=pic_id)  #find the pic
+            user = get_object_or_404(User, openid = openid)  #identify the user
+            #determine a pic to compare, rate = 0.6-1.8, text: no search. if mongodb try match
+            #order_by upload
+            #if there isn't return rate refuse page==get or 404
+
+            item2 = Pic.objects.exclude(pk=pic_id).filter(rated__lte=10 + int(item1.rated*1.8))
+            pics = [
+                item1,
+                item2
+            ] #can be rewrite
+            #fill the context with forms data and other variables
+            #render and return form with initial for rate
+            form = Rform(pics)
+            form.fields['hidden_pic1'] = pic_id
+            form.fields['hidden_pic2'] = item2.pk
+            context = {
+                'form': form
+            }
+            return render(request, 'rate.html', context)
