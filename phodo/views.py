@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from .forms import Rform
+from .forms import Rform, UploadForm
 from .models import User, Pic
 import random
 # Create your views here.
@@ -59,6 +59,7 @@ class RateView(View):
     def post(self, request, *args, **kwargs):
         form = Rform(request.POST)
         #here i will handle the posted form, first validate data, then calculate elo rate, then update to db.
+        if form.is_valid():
 
 
 class PicRateView(View):
@@ -89,3 +90,39 @@ class PicRateView(View):
                 'form': form
             }
             return render(request, 'rate.html', context)
+
+class UploadView(View):
+    # form_class = UploadForm()
+    op_cache = {'': ''} #is this a dict
+    def get(self, request, *args, **kwargs):
+        openid = request.session.get('openid', None)
+        if openid == None:
+            return HttpResponseRedirect(
+                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+        o_id = random.randint #how long is this random? need review???
+        self.op_cache.update(openid, o_id)  #here TODO I need put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
+        id_form = UploadForm(initial={'o_id': o_id, 'openid': openid})
+        # form_class.fields['o_id'] = random.randint()
+        return render(request, 'upload.html', {'form': id_form})
+
+    def post(self, request, *args, **kwargs):
+        uploaded = UploadForm(request.POST, request.FILES)
+        if uploaded.is_valid():
+            openid = uploaded.cleaned_data['openid']
+            o_id = uploaded.cleaned_data['o_id']
+            #above i get the data from the form and then goes to that dict
+            if self.op_cache.get(openid) == o_id:
+                pic = Pic()
+                pic.picture = uploaded.cleaned_data['picture'] #TODO size adjust, scale limit, tages auto generate
+                pic.text = uploaded.cleaned_data['text']
+                pic.save()
+                request.session['uploaded'] = True
+                return render(request, 'result.html', {'success': True})
+            else:
+                return render(request, 'result.html', {'success': False})
+        else:
+            return render(request, 'result.html', {'success': False})
+
+
+
+

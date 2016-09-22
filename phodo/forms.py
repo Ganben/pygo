@@ -20,3 +20,10 @@ class Rform(forms.Form):
      #choice = forms.ChoiceField(label='Select a better one', widget=forms.RadioSelect)  #somw where to impl choice https://docs.djangoproject.com/el/1.10/ref/models/fields/#field-choices
      hidden_pic1 = forms.IntegerField(widget=forms.HiddenInput)
      hidden_pic2 = forms.IntegerField(widget=forms.HiddenInput)
+
+class UploadForm(forms.Form):
+     #TODO obviously here we need a dynamic choice selecting; to select the available photo topics.
+     text = forms.CharField(label='Text', max_length=60)
+     picture = forms.ImageField()
+     o_id = forms.IntegerField(widget=forms.HiddenInput)
+     openid = forms.IntegerField(widget=forms.HiddenInput)

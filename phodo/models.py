@@ -22,7 +22,7 @@ class Pic(models.Model):
 	added = models.DateTimeField(auto_now_add=True)
 	text = models.CharField(max_length=60)
 	def __str__(self):
-		return self.picture
+		return str(self.rating)
 
 def pic_name(instance):
 	return '/'.join([str(datetime.date.year), '-', str(datetime.date.month), '/', instance.user.domain, '-', instance.user.openid, '-', format(datetime.now(), u'U')])
