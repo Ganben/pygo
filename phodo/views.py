@@ -57,9 +57,26 @@ class RateView(View):
             return render(request, 'rate.html', context)
 
     def post(self, request, *args, **kwargs):
-        form = Rform(request.POST)
+        openid = request.session.get('openid', None)
+        if openid == None:
+            return HttpResponseRedirect(
+                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+        else:
+            form = Rform(request.POST)
         #here i will handle the posted form, first validate data, then calculate elo rate, then update to db.
         if form.is_valid():
+            #query two pic objects
+            id1 = form.cleaned_data['hidden_pic1']
+            pic1 = get_object_or_404(Pic, pk=id1)
+            id2 = form.cleaned_data['hidden_pic2']
+            pic2 = get_object_or_404(Pic, pk=id2)
+            pic1.addRate()
+            pic2.addRate()
+            k1 = 500/pic1.rated + 16
+            k2 = 500/pic2.rated + 16
+            win = form.cleaned_data
+            #rated + 1 and update elo rating and save;
+
 
 
 class PicRateView(View):

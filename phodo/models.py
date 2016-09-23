@@ -21,8 +21,18 @@ class Pic(models.Model):
 	picture = models.ImageField(upload_to=pic_name)
 	added = models.DateTimeField(auto_now_add=True)
 	text = models.CharField(max_length=60)
+	tag = models.CharField(max_length=40, default=None)
 	def __str__(self):
 		return str(self.rating)
+	def addRate(self):
+		self.rated += 1
+
+class Tag(models.Model):
+	name = models.CharField(max_length=40)
+	active = models.BooleanField(default=True)
+	created = models.DateTimeField(auto_now_add=True)
+	def __str__(self):
+		return self.name
 
 def pic_name(instance):
 	return '/'.join([str(datetime.date.year), '-', str(datetime.date.month), '/', instance.user.domain, '-', instance.user.openid, '-', format(datetime.now(), u'U')])
