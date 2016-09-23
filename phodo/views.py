@@ -4,9 +4,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform, UploadForm
 from .models import User, Pic
+import logging
 import random
+import math
 # Create your views here.
 
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
 WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fpark%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
@@ -50,7 +54,8 @@ class RateView(View):
             form = Rform(pics[0])
             form.fields['hidden_pic1'] = pics[0].id
             form.fields['hidden_pic2'] = pics[1].id
-            #fill context with forms and other variables
+            logger.debug('form fields %s', str(form.hidden_pic1))
+            #fill context with forms and other variables#maybe it should direct assign instead of use fields method
             context = {
                 'form': form
             }
@@ -72,12 +77,23 @@ class RateView(View):
             pic2 = get_object_or_404(Pic, pk=id2)
             pic1.addRate()
             pic2.addRate()
-            k1 = 500/pic1.rated + 16
-            k2 = 500/pic2.rated + 16
-            win = form.cleaned_data
+            #calculate floating index k according to its total rated times;
+            k1 = 300/(5+pic1.rated) + 20
+            k2 = 300/(5+pic2.rated) + 20
+            win = form.cleaned_data['choice']
             #rated + 1 and update elo rating and save;
-
-
+            if win == id1:
+                #1 wins ,update the both rating:
+                pic1.rating += k1(1 - 1/(math.pow(10, (pic2.rating - pic1.rating)/400) + 1))
+                pic2.rating += k2(0 - 1/(math.pow(10, (pic1.rating - pic2.rating)/400) + 1))
+                pic1.save()
+                pic2.save()
+            else:
+                pic1.rating += k1(0 - 1 / (math.pow(10, (pic2.rating - pic1.rating) / 400) + 1))
+                pic2.rating += k2(1 - 1 / (math.pow(10, (pic1.rating - pic2.rating) / 400) + 1))
+                pic1.save()
+                pic2.save()
+            return render(request, 'result.html', {'success': True})
 
 class PicRateView(View):
     #this view generate a rate of specific picture
