@@ -6,15 +6,15 @@ from .forms import Rform, UploadForm
 from .models import User, Pic
 import logging
 import random
-import math
+import math, requests, json
 # Create your views here.
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
-WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fpark%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
-
+WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
+WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/'
 
 class IndexView(View):
     #this view is to do 1, redirect to auth page(commom method)
@@ -29,6 +29,22 @@ class IndexView(View):
             #r_id = 1 cancelled, let rate get auto generate # auto generate r_id, = photo id , its rating times, pull another picture to compare with it.
             return HttpResponseRedirect(reverse('phodo:rate'))
 
+class LoginView(View):
+    #this handle the redirected url from wechat;
+    def get(self, request, *args, **kwargs):
+        code = request.GET.get('CODE', 'X')  # path variable ?CODE=xxxxxxxx pass to code.
+        if code == 'X':
+            return render(request, 'result.html', {'success': False})
+        else:
+            res = requests.get(WECHAT_AUTH_URL.join(code).join(
+                '&grant_type=authorization_code'))  # use wechat authorize api to fetch accesstoken, openid etc.
+            data = json.loads(res)
+            if data.get('errcode', 0) == 0:
+                u = User(name=data.openid, openid=data.openid)
+                # u.save()  # no user save needed! every thing comes from wechat user openid!
+                request.session['login'] = True
+                request.session['openid'] = data.openid
+                return HttpResponseRedirect(reverse('phodo:rate'))
 
 class RateView(View):
     #this view is to render the pic1 and pic2 to be rated by clicking
@@ -84,13 +100,13 @@ class RateView(View):
             #rated + 1 and update elo rating and save;
             if win == id1:
                 #1 wins ,update the both rating:
-                pic1.rating += k1(1 - 1/(math.pow(10, (pic2.rating - pic1.rating)/400) + 1))
-                pic2.rating += k2(0 - 1/(math.pow(10, (pic1.rating - pic2.rating)/400) + 1))
+                pic1.rating += int(k1(1 - 1/(math.pow(10, (pic2.rating - pic1.rating)/400) + 1)))
+                pic2.rating += int(k2(0 - 1/(math.pow(10, (pic1.rating - pic2.rating)/400) + 1)))
                 pic1.save()
                 pic2.save()
             else:
-                pic1.rating += k1(0 - 1 / (math.pow(10, (pic2.rating - pic1.rating) / 400) + 1))
-                pic2.rating += k2(1 - 1 / (math.pow(10, (pic1.rating - pic2.rating) / 400) + 1))
+                pic1.rating += int(k1(0 - 1 / (math.pow(10, (pic2.rating - pic1.rating) / 400) + 1)))
+                pic2.rating += int(k2(1 - 1 / (math.pow(10, (pic1.rating - pic2.rating) / 400) + 1)))
                 pic1.save()
                 pic2.save()
             return render(request, 'result.html', {'success': True})
