@@ -142,14 +142,15 @@ class PicRateView(View):
 
 class UploadView(View):
     # form_class = UploadForm()
-    op_cache = {'': ''} #is this a dict
+    op_cache = {'key': 'value'} #is this a dict
     def get(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         o_id = random.randint #how long is this random? need review???
-        self.op_cache.update(openid, o_id)  #here TODO I need put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
+        self.op_cache[openid] = o_id #put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
+        #or use update: .update({openid: o_id})
         id_form = UploadForm(initial={'o_id': o_id, 'openid': openid})
         # form_class.fields['o_id'] = random.randint()
         return render(request, 'upload.html', {'form': id_form})
@@ -165,6 +166,7 @@ class UploadView(View):
                 pic.picture = uploaded.cleaned_data['picture'] #TODO size adjust, scale limit, tages auto generate
                 pic.text = uploaded.cleaned_data['text']
                 pic.save()
+
                 request.session['uploaded'] = True
                 return render(request, 'result.html', {'success': True})
             else:

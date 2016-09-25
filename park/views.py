@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic import ListView
 from django.views import View
+from django.urls import reverse
 from .models import Car, Picture, User
 from .view.forms import LoginForm
 from .view.forms import FileForm
@@ -69,8 +70,9 @@ class LoginView(View):
             #TODO connect with wechat authorize?
         #response.set_cookie('username', username)
         request.session['logged'] = True
-        request.session['username'] = username
-        return  render(request, 'result.html', {'username': username})
+        request.session['openid'] = username
+        # return  render(request, 'result.html', {'username': username})
+        return HttpResponseRedirect(reverse('phodo:upload'))
 
 class PictureView(View):
     form_class = FileForm

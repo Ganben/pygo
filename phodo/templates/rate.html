@@ -6,15 +6,16 @@
 </head>
 <body>
 
-<form action="{% url 'phodo:rate' %}" method="post">
-    <ul>
-        {% for pic in field.choice %}
-        <li>
-            <input type="radio" value="{{ pic.id }}"><img src="{{pic.image.url}}" /> {{pic.user}}</input>
-        </li>
-        {% endfor %}
-    </ul>
-    <input type="submit" value="Confirm" />
-</form>
+<!--<form action="{% url 'phodo:rate' %}" method="post">-->
+    <!--<ul>-->
+        <!--{% for pic in field.choice %}-->
+        <!--<li>-->
+            <!--<input type="radio" value="{{ pic.id }}"><img src="{{pic.image.url}}" /> {{pic.user}}</input>-->
+        <!--</li>-->
+        <!--{% endfor %}-->
+    <!--</ul>-->
+    <!--<input type="submit" value="Confirm" />-->
+<!--</form>-->
+{{form}}
 </body>
 </html>
