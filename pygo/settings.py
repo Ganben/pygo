@@ -31,8 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'baom.apps.BaomConfig',
-    'polls.apps.PollsConfig',
+    # 'baom.apps.BaomConfig',
+    # 'polls.apps.PollsConfig',
+    'phodo.apps.PhodoConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -107,6 +108,19 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# image size limit;
+CONTENT_TYPES = ['image', 'video']
+# 2.5MB - 2621440
+# 5MB - 5242880
+# 10MB - 10485760
+# 20MB - 20971520
+# 50MB - 5242880
+# 100MB 104857600
+# 250MB - 214958080
+# 500MB - 429916160
+MAX_UPLOAD_SIZE = "2621440"
+#here to limit content size see source: http://stackoverflow.com/questions/2472422/django-file-upload-size-limit
 
 
 # Internationalization

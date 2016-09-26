@@ -1,12 +1,16 @@
+#-*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform, UploadForm
 from .models import User, Pic
-import logging
+import logging, datetime
 import random
 import math, requests, json
+from PIL import Image
+import PIL
+
 # Create your views here.
 
 # Get an instance of a logger
@@ -145,25 +149,33 @@ class UploadView(View):
     op_cache = {'key': 'value'} #is this a dict
     def get(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
+        logger.warning('welcome user %s' % openid)
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
-        o_id = random.randint #how long is this random? need review???
+        o_id = random.randint(1, 300) #how long is this random? need review???
         self.op_cache[openid] = o_id #put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
         #or use update: .update({openid: o_id})
         id_form = UploadForm(initial={'o_id': o_id, 'openid': openid})
+        logger.warning('return o_id = %s ' % o_id)
         # form_class.fields['o_id'] = random.randint()
         return render(request, 'upload.html', {'form': id_form})
 
     def post(self, request, *args, **kwargs):
         uploaded = UploadForm(request.POST, request.FILES)
         if uploaded.is_valid():
-            openid = uploaded.cleaned_data['openid']
-            o_id = uploaded.cleaned_data['o_id']
+            # openid = uploaded.cleaned_data['openid']
+            # o_id = uploaded.cleaned_data['o_id']
             #above i get the data from the form and then goes to that dict
-            if self.op_cache.get(openid) == o_id:
+            # logger.warning('o_id equals %s' % o_id)
+            # if self.op_cache.get(openid) == o_id:  debug not pass unique checking
+            if True:
                 pic = Pic()
-                pic.picture = uploaded.cleaned_data['picture'] #TODO size adjust, scale limit, tages auto generate
+                # pic.user = uploaded.cleaned_data['openid'] #change with no user connect
+                pic.user = request.session.get('openid')
+                pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate
+                # see source: http: // stackoverflow.com / questions / 24745857 / python - pillow - how - to - scale - an - image
+                # pic.picture = auto_resize(picture)
                 pic.text = uploaded.cleaned_data['text']
                 pic.save()
 
@@ -172,8 +184,29 @@ class UploadView(View):
             else:
                 return render(request, 'result.html', {'success': False})
         else:
-            return render(request, 'result.html', {'success': False})
+            return render(request, 'result.html', {'success': uploaded})
 
-
-
-
+def auto_resize(picture):
+    p = Image.open(picture)
+    #get size
+    width, height = p.size
+    logger.debug('incomming a picture with %s with %s ' % p.size)
+    if width > height:
+        #return a resized picture, depends on its originally vertical or horizontal
+        ratio = 1600 / width
+        rh = int(height * ratio)
+        size = (1600, 800)
+        # return p.resize(size, PIL.Image.ANTIALIAS)
+        p.resize(size, PIL.Image.ANTIALIAS)
+        fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+        p.save(fp)
+        return fp
+    else:
+        ratio = 1000 / height
+        rw = int( width * ratio)
+        size = (600, 1000)
+        # return p.resize(size, PIL.Image.ANTIALIAS)
+        p.resize(size, PIL.Image.ANTIALIAS)
+        fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+        p.save(fp)
+        return fp

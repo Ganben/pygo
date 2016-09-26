@@ -21,11 +21,12 @@ from rest_framework import routers
 
 
 urlpatterns = [
-    url(r'^polls/', include('polls.urls')),
+    # url(r'^polls/', include('polls.urls')),
     url(r'^admin/', admin.site.urls),
     # url(r'^api/v1/', include('authc.urls')),
     # url(r'^authc/', include('rest_framework.urls', namespace='rest_framework')),
     # url(r'^apis/', include('snippets.urls')),
     url(r'^park/', include('park.urls')),
-    url(r'^baom/', include('baom.urls')),
+    # url(r'^baom/', include('baom.urls')),
+    url(r'^pp/', include('phodo.urls')),
 ]

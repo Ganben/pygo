@@ -25,5 +25,5 @@ class UploadForm(forms.Form):
      #TODO obviously here we need a dynamic choice selecting; to select the available photo topics = Tags.
      text = forms.CharField(label='Text', max_length=60)
      picture = forms.ImageField()
-     o_id = forms.IntegerField(widget=forms.HiddenInput)
-     openid = forms.IntegerField(widget=forms.HiddenInput)
+     # o_id = forms.IntegerField(widget=forms.HiddenInput)
+     # openid = forms.CharField(widget=forms.HiddenInput)
