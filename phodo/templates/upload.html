@@ -5,10 +5,26 @@
     <title>Title</title>
 </head>
 <body>
-<form action="{% url 'phodo:upload' %}" enctype = "multipart/form-data" method="post">
+<form name = "form" action="{% url 'phodo:upload' %}" enctype = "multipart/form-data" method="POST">
     {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Submit" />
+    <div style = "max-width:470px;">
+            <center>
+               <input type = "text" style = "margin-left:20%;"
+               placeholder = "text" name = "text" />
+            </center>
+         </div>
+
+         <br>
+
+         <div style = "max-width:470px;">
+            <center>
+               <input type = "file" style = "margin-left:20%;"
+                  placeholder = "Picture" name = "picture" />
+            </center>
+         </div>
+
+         <br>
+    <input type="submit" value="Upload" />
 </form>
 </body>
 </html>

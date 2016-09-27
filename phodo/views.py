@@ -172,11 +172,12 @@ class UploadView(View):
             if True:
                 pic = Pic()
                 # pic.user = uploaded.cleaned_data['openid'] #change with no user connect
-                pic.user = request.session.get('openid')
+                pic.user = request.session.get('openid', 'anoymous')
                 pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate
                 # see source: http: // stackoverflow.com / questions / 24745857 / python - pillow - how - to - scale - an - image
                 # pic.picture = auto_resize(picture)
                 pic.text = uploaded.cleaned_data['text']
+                pic.tag = 'default'
                 pic.save()
 
                 request.session['uploaded'] = True
