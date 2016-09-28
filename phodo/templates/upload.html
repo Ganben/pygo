@@ -3,27 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+            <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.css">
+        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.min.css">
 </head>
 <body>
 <form name = "form" action="{% url 'phodo:upload' %}" enctype = "multipart/form-data" method="POST">
     {% csrf_token %}
-    <div style = "max-width:470px;">
-            <center>
-               <input type = "text" style = "margin-left:20%;"
-               placeholder = "text" name = "text" />
-            </center>
-         </div>
+    <!--<div style = "max-width:470px;">-->
+            <!--<center>-->
+               <!--<input type = "text" style = "margin-left:20%;"-->
+               <!--placeholder = "text" name = "text" />-->
+            <!--</center>-->
+         <!--</div>-->
 
-         <br>
+         <!--<br>-->
 
-         <div style = "max-width:470px;">
-            <center>
-               <input type = "file" style = "margin-left:20%;"
-                  placeholder = "Picture" name = "picture" />
-            </center>
-         </div>
+         <!--<div style = "max-width:470px;">-->
+            <!--<center>-->
+               <!--<input type = "file" style = "margin-left:20%;"-->
+                  <!--placeholder = "Picture" name = "picture" />-->
+            <!--</center>-->
+         <!--</div>-->
 
-         <br>
+         <!--<br>-->
+    {{ form }}
     <input type="submit" value="Upload" />
 </form>
 </body>

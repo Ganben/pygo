@@ -3,8 +3,8 @@ from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from .forms import Rform, UploadForm
-from .models import User, Pic
+from .forms import Rform, UploadForm, UploadForm2P, Rform2P
+from .models import User, Pic, Tag
 import logging, datetime
 import random
 import math, requests, json
@@ -71,7 +71,7 @@ class RateView(View):
             ]
             #render page and return forms for rate
             #form first and then fill with pic object.
-            form = Rform(pics[0])
+            form = Rform(pics)    #should be a list OMG
             form.fields['hidden_pic1'] = pics[0].id
             form.fields['hidden_pic2'] = pics[1].id
             logger.debug('form fields %s', str(form.hidden_pic1))
@@ -87,7 +87,7 @@ class RateView(View):
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         else:
-            form = Rform(request.POST)
+            form = Rform2P(request.POST)
         #here i will handle the posted form, first validate data, then calculate elo rate, then update to db.
         if form.is_valid():
             #query two pic objects
@@ -147,22 +147,27 @@ class PicRateView(View):
 class UploadView(View):
     # form_class = UploadForm()
     op_cache = {'key': 'value'} #is this a dict
+    tags = Tag.objects.filter(active=True)
     def get(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
         logger.warning('welcome user %s' % openid)
+        #lets make a choice field in upload form;
+        # tags = Tag.objects.filter(active=True)
+
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         o_id = random.randint(1, 300) #how long is this random? need review???
         self.op_cache[openid] = o_id #put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
         #or use update: .update({openid: o_id})
-        id_form = UploadForm(initial={'o_id': o_id, 'openid': openid})
+        id_form = UploadForm(self.tags)
         logger.warning('return o_id = %s ' % o_id)
         # form_class.fields['o_id'] = random.randint()
         return render(request, 'upload.html', {'form': id_form})
 
     def post(self, request, *args, **kwargs):
-        uploaded = UploadForm(request.POST, request.FILES)
+        # form = UploadForm2post(self.tags)
+        uploaded = UploadForm2P(request.POST, request.FILES)
         if uploaded.is_valid():
             # openid = uploaded.cleaned_data['openid']
             # o_id = uploaded.cleaned_data['o_id']
@@ -173,11 +178,14 @@ class UploadView(View):
                 pic = Pic()
                 # pic.user = uploaded.cleaned_data['openid'] #change with no user connect
                 pic.user = request.session.get('openid', 'anoymous')
-                pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate
+                pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate; replace by models save rewrite;
                 # see source: http: // stackoverflow.com / questions / 24745857 / python - pillow - how - to - scale - an - image
-                # pic.picture = auto_resize(picture)
+                # pic.picture = auto_resize(picture)  #must rewrite save method due to http://stackoverflow.com/questions/30434323/django-resize-image-before-upload
                 pic.text = uploaded.cleaned_data['text']
-                pic.tag = 'default'
+                tag = uploaded.cleaned_data['choice']
+
+                pic.tag = get_object_or_404(Tag, pk=tag)
+                # pic.tag = 'default'
                 pic.save()
 
                 request.session['uploaded'] = True
@@ -187,7 +195,7 @@ class UploadView(View):
         else:
             return render(request, 'result.html', {'success': uploaded})
 
-def auto_resize(picture):
+def auto_resize(picture):     #maybe this method is a wrong place!
     p = Image.open(picture)
     #get size
     width, height = p.size
@@ -196,18 +204,18 @@ def auto_resize(picture):
         #return a resized picture, depends on its originally vertical or horizontal
         ratio = 1600 / width
         rh = int(height * ratio)
-        size = (1600, 800)
+        size = (1600, rh)
         # return p.resize(size, PIL.Image.ANTIALIAS)
-        p.resize(size, PIL.Image.ANTIALIAS)
-        fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
-        p.save(fp)
-        return fp
+        p1 = p.resize(size, PIL.Image.ANTIALIAS)
+        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+        # p.save(fp)
+        return p1
     else:
         ratio = 1000 / height
         rw = int( width * ratio)
-        size = (600, 1000)
+        size = (rw, 1000)
         # return p.resize(size, PIL.Image.ANTIALIAS)
-        p.resize(size, PIL.Image.ANTIALIAS)
-        fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
-        p.save(fp)
-        return fp
+        p1 = p.resize(size, PIL.Image.ANTIALIAS)
+        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
+        # p.save(fp)
+        return p1
