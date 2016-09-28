@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^r/(?P<pic_id>[0-9]+)/$', views.PicRateView.as_view(), name='picrate'), #for a rate for specific picture
     url(r'^login/$', views.LoginView.as_view(), name='login'),
     url(r'^upload/$', views.UploadView.as_view(), name='upload'),
+    url(r'^result/$', views.ResultView.as_view(), name='result'),
 ]

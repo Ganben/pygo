@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-            <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
-        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.css">
-        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/0.4.3/weui.min.css">
+        <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/1.0.0/weui.css">
+        <link rel="stylesheet" href="//res.wx.qq.com/open/libs/weui/1.0.0/weui.min.css">
+
 </head>
 <body>
-<form name = "form" action="{% url 'phodo:upload' %}" enctype = "multipart/form-data" method="POST">
-    {% csrf_token %}
-    <!--<div style = "max-width:470px;">-->
-            <!--<center>-->
-               <!--<input type = "text" style = "margin-left:20%;"-->
-               <!--placeholder = "text" name = "text" />-->
-            <!--</center>-->
-         <!--</div>-->
+<div class="weui-tab">
+    <div class="weui-tab__panel">
+        <form name = "form" action="{% url 'phodo:upload' %}" enctype = "multipart/form-data" method="POST">
+        {% csrf_token %}
 
-         <!--<br>-->
+        {{ form }}
+            <input type="submit" value="Upload" />
+        </form>
+    </div>
+    <div class="weui-tabbar">
+        <a href="{% url 'phodo:rate' %}" class="weui-tabbar__item ">
 
-         <!--<div style = "max-width:470px;">-->
-            <!--<center>-->
-               <!--<input type = "file" style = "margin-left:20%;"-->
-                  <!--placeholder = "Picture" name = "picture" />-->
-            <!--</center>-->
-         <!--</div>-->
+            <p class="weui-tabbar__label">比图</p>
+        </a>
+        <a href="{% url 'phodo:upload' %}" class="weui-tabbar__item weui-bar__item_on">
 
-         <!--<br>-->
-    {{ form }}
-    <input type="submit" value="Upload" />
-</form>
+            <p class="weui-tabbar__label">传图</p>
+        </a>
+        <a href="{% url 'phodo:result' %}" class="weui-tabbar__item">
+            <!--<img src="./images/icon_tabbar.png" alt="" class="weui-tabbar__icon">-->
+            <p class="weui-tabbar__label">榜单</p>
+        </a>
+    </div>
+</div>
 </body>
 </html>

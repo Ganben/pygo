@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 #user and auth both use wechat pub xxx
 WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
 WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/'
+RANDOM = 4
 
 class IndexView(View):
     #this view is to do 1, redirect to auth page(commom method)
@@ -61,24 +62,28 @@ class RateView(View):
         else:
             #how to generate a random picture? its a auto updated list!
             #right now i just use a last 3 picture, for sqlite pk +1 or -1, ordered_by - rated times.
-            list = Pic.objects.order_by('-rated')[:20]
+
+            list = Pic.objects.order_by('-rated')[:40]
+            n = len(list)
             #random 2 in 20
-            n1 = random.randrange(0,18,2)
-            n2 = random.randrange(1,19,2)
+            n1 = random.randrange(0,n,2)
+            n2 = random.randrange(1,n-1,2)
             pics = [
                 list[n1],
                 list[n2]
             ]
             #render page and return forms for rate
             #form first and then fill with pic object.
-            form = Rform(pics)    #should be a list OMG
-            form.fields['hidden_pic1'] = pics[0].id
-            form.fields['hidden_pic2'] = pics[1].id
-            logger.debug('form fields %s', str(form.hidden_pic1))
+            form = Rform(pics=pics, initial={'hidden_pic1': pics[0].id, 'hidden_pic2': pics[1].id})    #should be a list OMG
+            # form.hidden_pic1 = pics[0].id
+            # form.hidden_pic2 = pics[1].id
+            logger.warning('form fields %s', str(form.fields['hidden_pic1']))
             #fill context with forms and other variables#maybe it should direct assign instead of use fields method
             context = {
                 'form': form
             }
+            #TODO re build rate form by abandon choice field, generate another option, a complicated context! fill img url manuelly
+            #Reason: impossible to use customized style in build in widgets like choice field.
             return render(request, 'rate.html', context)
 
     def post(self, request, *args, **kwargs):
@@ -98,19 +103,20 @@ class RateView(View):
             pic1.addRate()
             pic2.addRate()
             #calculate floating index k according to its total rated times;
-            k1 = 300/(5+pic1.rated) + 20
-            k2 = 300/(5+pic2.rated) + 20
+            k1 = float(300/(5+pic1.rated) + 20)
+            k2 = float(300/(5+pic2.rated) + 20)
             win = form.cleaned_data['choice']
             #rated + 1 and update elo rating and save;
             if win == id1:
                 #1 wins ,update the both rating:
-                pic1.rating += int(k1(1 - 1/(math.pow(10, (pic2.rating - pic1.rating)/400) + 1)))
-                pic2.rating += int(k2(0 - 1/(math.pow(10, (pic1.rating - pic2.rating)/400) + 1)))
+                pic1.rating += int(k1*(1 - 1/(math.pow(10, float(pic2.rating - pic1.rating)/400) + 1)))
+                pic2.rating += int(k2*(0 - 1/(math.pow(10, float(pic1.rating - pic2.rating)/400) + 1)))
                 pic1.save()
                 pic2.save()
             else:
-                pic1.rating += int(k1(0 - 1 / (math.pow(10, (pic2.rating - pic1.rating) / 400) + 1)))
-                pic2.rating += int(k2(1 - 1 / (math.pow(10, (pic1.rating - pic2.rating) / 400) + 1)))
+                delta = float(pic2.rating - pic1.rating)
+                pic1.rating += int(k1*(0 - 1/(math.pow(10,  delta/400) + 1)))
+                pic2.rating += int(k2*(1 - 1/(math.pow(10, -delta/400) + 1)))
                 pic1.save()
                 pic2.save()
             return render(request, 'result.html', {'success': True})
@@ -136,9 +142,9 @@ class PicRateView(View):
             ] #can be rewrite
             #fill the context with forms data and other variables
             #render and return form with initial for rate
-            form = Rform(pics)
-            form.fields['hidden_pic1'] = pic_id
-            form.fields['hidden_pic2'] = item2.pk
+            form = Rform(pics=pics, initial={'hidden_pic1': pic_id, 'hidden_pic2': item2.id})
+            # form.fields['hidden_pic1'] = pic_id
+            # form.fields['hidden_pic2'] = item2.pk
             context = {
                 'form': form
             }
@@ -167,6 +173,11 @@ class UploadView(View):
 
     def post(self, request, *args, **kwargs):
         # form = UploadForm2post(self.tags)
+        openid = request.session.get('openid', None)
+        if openid == None:
+            return HttpResponseRedirect(
+                WECHAT_URL)
+
         uploaded = UploadForm2P(request.POST, request.FILES)
         if uploaded.is_valid():
             # openid = uploaded.cleaned_data['openid']
@@ -219,3 +230,7 @@ def auto_resize(picture):     #maybe this method is a wrong place!
         # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
         # p.save(fp)
         return p1
+
+class ResultView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'result.html', {'success': True})
