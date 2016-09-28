@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.conf import settings
 from rest_framework import routers
 
 
@@ -30,3 +31,8 @@ urlpatterns = [
     # url(r'^baom/', include('baom.urls')),
     url(r'^pp/', include('phodo.urls')),
 ]
+
+# if settings.DEBUG:
+#     urlpatterns.append(
+#         url(r'^pictures/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+#     )

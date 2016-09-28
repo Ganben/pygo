@@ -72,6 +72,21 @@ class RateView(View):
                 list[n1],
                 list[n2]
             ]
+
+            formchoices = [
+                {
+                    'value': pics[0].id,
+                    'url': pics[0].picture.path,
+                    'tag': pics[0].tag.name,
+                    'id': 'id_choice_%s' % 0
+                },
+                {
+                    'value': pics[1].id,
+                    'url': pics[1].picture.path,
+                    'tag': pics[1].tag.name,
+                    'id': 'id_choice_%s' % 1
+                }
+            ]
             #render page and return forms for rate
             #form first and then fill with pic object.
             form = Rform(pics=pics, initial={'hidden_pic1': pics[0].id, 'hidden_pic2': pics[1].id})    #should be a list OMG
@@ -80,7 +95,8 @@ class RateView(View):
             logger.warning('form fields %s', str(form.fields['hidden_pic1']))
             #fill context with forms and other variables#maybe it should direct assign instead of use fields method
             context = {
-                'form': form
+                'form': form,
+                'formchoices': formchoices
             }
             #TODO re build rate form by abandon choice field, generate another option, a complicated context! fill img url manuelly
             #Reason: impossible to use customized style in build in widgets like choice field.
@@ -141,12 +157,27 @@ class PicRateView(View):
                 item2
             ] #can be rewrite
             #fill the context with forms data and other variables
+            formchoices = [
+                {
+                    'value': pics[0].id,
+                    'url': pics[0].picture.url,
+                    'tag': pics[0].tag.name,
+                    'id': 'id_choice_%s' % 0
+                },
+                {
+                    'value': pics[1].id,
+                    'url': pics[1].picture.url,
+                    'tag': pics[1].tag.name,
+                    'id': 'id_choice_%s' % 1
+                }
+            ]
             #render and return form with initial for rate
             form = Rform(pics=pics, initial={'hidden_pic1': pic_id, 'hidden_pic2': item2.id})
             # form.fields['hidden_pic1'] = pic_id
             # form.fields['hidden_pic2'] = item2.pk
             context = {
-                'form': form
+                'form': form,
+                'formchoices': formchoices
             }
             return render(request, 'rate.html', context)
 
