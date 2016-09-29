@@ -10,8 +10,8 @@ import logging, datetime
 import random
 import oss2
 import math, requests, json
-from PIL import Image
-import PIL
+# from PIL import Image
+# import PIL
 
 # Create your views here.
 
@@ -23,30 +23,30 @@ WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={0}&redi
 WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'
 RANDOM = 4
 
-def auto_resize(picture):     #maybe this method is a wrong place!
-    p = Image.open(picture)
-    #get size
-    width, height = p.size
-    logger.debug('incomming a picture with %s with %s ' % p.size)
-    if width > height:
-        #return a resized picture, depends on its originally vertical or horizontal
-        ratio = 1600 / width
-        rh = int(height * ratio)
-        size = (1600, rh)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
-        # p.save(fp)
-        return p1
-    else:
-        ratio = 1000 / height
-        rw = int( width * ratio)
-        size = (rw, 1000)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
-        # p.save(fp)
-        return p1
+# def auto_resize(picture):     #maybe this method is a wrong place!
+#     p = Image.open(picture)
+#     #get size
+#     width, height = p.size
+#     logger.debug('incomming a picture with %s with %s ' % p.size)
+#     if width > height:
+#         #return a resized picture, depends on its originally vertical or horizontal
+#         ratio = 1600 / width
+#         rh = int(height * ratio)
+#         size = (1600, rh)
+#         # return p.resize(size, PIL.Image.ANTIALIAS)
+#         p1 = p.resize(size, PIL.Image.ANTIALIAS)
+#         # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+#         # p.save(fp)
+#         return p1
+#     else:
+#         ratio = 1000 / height
+#         rw = int( width * ratio)
+#         size = (rw, 1000)
+#         # return p.resize(size, PIL.Image.ANTIALIAS)
+#         p1 = p.resize(size, PIL.Image.ANTIALIAS)
+#         # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
+#         # p.save(fp)
+#         return p1
 
 class IndexView(View):
     #this view is to do 1, redirect to auth page(commom method)
