@@ -11,11 +11,29 @@
 
 <div class="weui-tab">
     <div class="weui-tab__panel">
-        <div class="" >
-        操作结果： {{success}}
-            <p>
-                还在开发中……
-            </p>
+
+        <div class="weui-msg">
+            {% if not mode %}
+        <div class="weui-msg__icon-area"><i class="weui-icon-success weui-icon_msg"></i>
+        </div>
+            {% endif %}
+        <div class="weui-msg__text-area">
+        <h2 class="weui-msg__title">{% if success %} 好了 {% else %} 出错了 {% endif %}</h2>
+        <p class="weui-msg__desc">别迷惑，很多还没开发！</p>
+
+
+            {% if picture %}
+            <div class="weui-cell">
+            <div style="background: url({{picture.url}}) no-repeat center center;background-size: 100% auto; height: 300px; width: 600px;">
+
+            <div class="weui-cell">描述：<p class="weui-cell__ft">{{picture.text}}</p></div>
+            <div class="weui-cell">评级：<p class="weui-cell__ft">{{picture.rating}}</p></div>
+            <div class="weui-cell">次数：<p class="weui-cell__ft">{{picture.rated}}</p></div>
+            <div class="weui-cell">作业：<p class="weui-cell__ft">{{picture.tag}}</p></div>
+            </div>
+            </div>
+            {% endif %}
+        </div>
         </div>
     </div>
     <div class="weui-tabbar">
