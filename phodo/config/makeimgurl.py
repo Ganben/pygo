@@ -32,7 +32,7 @@ def uploadImgHandler(uplfile):
 	ext = uplfile.name.split('.')[-1]
 	size = uplfile.size
 	if ext == 'jpg':
-		if size <= 2048000:
+		if size <= 2508000:
 			return uplfile.read()
 
 	logger.debug('file not jpg or too big')
