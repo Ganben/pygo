@@ -19,7 +19,7 @@ def pic_name(instance, filename):   #this method must be def before class, other
 	return 'pictures/{0}/{1}.{ext}'.format(time.strftime("%Y/%m/"), uuid1(), ext=ext)
 
 @python_2_unicode_compatible
-class User(models.Model):
+class User_p(models.Model):
 	openid = models.CharField(max_length=40)
 	domain = models.CharField(max_length=20, default='wechat')
 	last_login = models.DateTimeField(blank=True)

@@ -87,7 +87,7 @@ class PictureView(View):
         if form.is_valid():
             pic = Picture()
             pic.name = form.cleaned_data['name']
-            pic.picture = form.cleaned_data['picture']
+            # pic.picture = form.cleaned_data['picture']
             pic.save()
 
             return render(request, 'saved.html', {'saved': True})

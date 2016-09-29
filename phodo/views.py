@@ -4,14 +4,14 @@ from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform, UploadForm, UploadForm2P, Rform2P
-from .models import User, Pic, Tag
+from .models import User_p, Pic, Tag
 from .config import nogit, makeimgurl
 import logging, datetime
 import random
 import oss2
 import math, requests, json
-from PIL import Image
-import PIL
+# from PIL import Image
+# import PIL
 
 # Create your views here.
 
@@ -19,34 +19,34 @@ import PIL
 logger = logging.getLogger('django')
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
-WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={0}&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'.format(nogit.wxTestAppID)
+WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={0}&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fpp%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'.format(nogit.wxTestAppID)
 WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'
 RANDOM = 4
 
-def auto_resize(picture):     #maybe this method is a wrong place!
-    p = Image.open(picture)
-    #get size
-    width, height = p.size
-    logger.debug('incomming a picture with %s with %s ' % p.size)
-    if width > height:
-        #return a resized picture, depends on its originally vertical or horizontal
-        ratio = 1600 / width
-        rh = int(height * ratio)
-        size = (1600, rh)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
-        # p.save(fp)
-        return p1
-    else:
-        ratio = 1000 / height
-        rw = int( width * ratio)
-        size = (rw, 1000)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
-        # p.save(fp)
-        return p1
+# def auto_resize(picture):     #maybe this method is a wrong place!
+#     p = Image.open(picture)
+#     #get size
+#     width, height = p.size
+#     logger.debug('incomming a picture with %s with %s ' % p.size)
+#     if width > height:
+#         #return a resized picture, depends on its originally vertical or horizontal
+#         ratio = 1600 / width
+#         rh = int(height * ratio)
+#         size = (1600, rh)
+#         # return p.resize(size, PIL.Image.ANTIALIAS)
+#         p1 = p.resize(size, PIL.Image.ANTIALIAS)
+#         # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+#         # p.save(fp)
+#         return p1
+#     else:
+#         ratio = 1000 / height
+#         rw = int( width * ratio)
+#         size = (rw, 1000)
+#         # return p.resize(size, PIL.Image.ANTIALIAS)
+#         p1 = p.resize(size, PIL.Image.ANTIALIAS)
+#         # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
+#         # p.save(fp)
+#         return p1
 
 class IndexView(View):
     #this view is to do 1, redirect to auth page(commom method)
@@ -65,18 +65,20 @@ class LoginView(View):
     #this handle the redirected url from wechat;
     def get(self, request, *args, **kwargs):
         code = request.GET.get('CODE', 'X')  # path variable ?CODE=xxxxxxxx pass to code.
+        logger.debug('code {0} accepted'.format(code))
         if code == 'X':
             return render(request, 'result.html', {'success': False})
         else:
             res = requests.get(WECHAT_AUTH_URL.format(nogit.wxTestAppID, nogit.wxTestAppSecret, code))  # use wechat authorize api to fetch accesstoken, openid etc.
             data = json.loads(res)
+            logger.debug('resp from wx {0}: {1}'.format(data.openid, str(data)))
             if data.get('errcode', 0) == 0:
                 try:
-                    u = User.objects.get(openid=data.openid)
+                    u = User_p.objects.get(openid=data.openid)
                     u.last_login = datetime.datetime.now()
                     logger.debug('update user {0}'.format(data.openid))
                 except:
-                    u = User()
+                    u = User_p()
                     u.openid = data.openid
                     u.name = data.openid
                     logger.debug('new user {0}'.format(u.openid))
@@ -146,8 +148,7 @@ class RateView(View):
     def post(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
         if openid == None:
-            return HttpResponseRedirect(
-                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+            return HttpResponseRedirect(WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         else:
             form = Rform2P(request.POST)
         #here i will handle the posted form, first validate data, then calculate elo rate, then update to db.
@@ -183,11 +184,10 @@ class PicRateView(View):
     def get(self, request, pic_id, *args, **kwargs):
         openid = request.session.get('openid', None)
         if openid == None:
-            return HttpResponseRedirect(
-                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+            return HttpResponseRedirect(WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         else:
             item1 = get_object_or_404(Pic, pk=pic_id)  #find the pic
-            user = get_object_or_404(User, openid = openid)  #identify the user
+            user = get_object_or_404(User_p, openid = openid)  #identify the user
             #determine a pic to compare, rate = 0.6-1.8, text: no search. if mongodb try match
             #order_by upload
             #if there isn't return rate refuse page==get or 404
@@ -237,8 +237,7 @@ class UploadView(View):
         # tags = Tag.objects.filter(active=True)
         tags = Tag.objects.filter(active=True)
         if openid == None:
-            return HttpResponseRedirect(
-                WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+            return HttpResponseRedirect(WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         o_id = random.randint(1, 300) #how long is this random? need review???
         self.op_cache[openid] = o_id #put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
         #or use update: .update({openid: o_id})
@@ -258,8 +257,7 @@ class UploadView(View):
         # form = UploadForm2post(self.tags)
         openid = request.session.get('openid', None)
         if openid == None:
-            return HttpResponseRedirect(
-                WECHAT_URL)
+            return HttpResponseRedirect(WECHAT_URL)
         logger.debug('post uploaded triggered by {0}'.format(openid))
         uploaded = UploadForm2P(request.POST, request.FILES)
         if uploaded.is_valid():
