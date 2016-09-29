@@ -20,9 +20,9 @@ logger = logging.getLogger('django')
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
 WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={0}&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fpp%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'.format(nogit.wxTestAppID)
-WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'
+WECHAT_AUTH_URL = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'
 RANDOM = 4
-
+WE_AUTH = 'https://open.weixin.qq.com/connect/oauth2/access_token'
 # def auto_resize(picture):     #maybe this method is a wrong place!
 #     p = Image.open(picture)
 #     #get size
@@ -71,25 +71,42 @@ def login(request, wcde='1'):
         return render(request, 'result.html', {'success': False})
     else:
         res = requests.get(WECHAT_AUTH_URL.format(nogit.wxTestAppID, nogit.wxTestAppSecret, code))  # use wechat authorize api to fetch accesstoken, openid etc.
-        logger.debug('res plain: {0}'.format(str(res)))
-        data = json.loads(res)
-        logger.debug('resp from wx {0}: {1}'.format(data.openid, str(data)))
-        if data.get('errcode', 0) == 0:
+        # payload = {'grant_type': 'authorization_code',  'code': code, 'secret': nogit.wxTestAppSecret, 'appid': nogit.wxTestAppID}
+        #sequence must reverse, it's not suit for wx
+        # res = requests.get(WE_AUTH, payload)
+        try:
+            logger.debug('res.content {0}'.format(str(res.content)))
+            logger.debug('res.statuscode {0}'.format(str(res.status_code)))
+            logger.debug('res.text {0}'.format(str(res.text)))
+
+            rjson = res.json()
+        except:
+            logger.debug('res json except')
+        logger.debug('url of requests: {0}'.format(res.url))
+        data = {}
+        try:
+            data.update(json.loads(res.text))
+        except:
+            logger.debug('json loads exception')
+        if not data.get('errcode', 'X') == 'X':
+            logger.debug('resp from wx {0}: {1}'.format(data.get('errmsg'), str(data)))
+        if not data.get('openid', 0) == 0:
             try:
-                u = User_p.objects.get(openid=data.openid)
+                logger.debug('update user {0}'.format(data.get('openid', 'x')))
+                u = User_p.objects.get(openid=data.get('openid', 'x'))
                 u.last_login = datetime.datetime.now()
-                logger.debug('update user {0}'.format(data.openid))
+
             except:
                 u = User_p()
-                u.openid = data.openid
-                u.name = data.openid
+                u.openid = data.get('openid')
+                u.name = data.get('openid')
                 logger.debug('new user {0}'.format(u.openid))
                 u.last_login = datetime.datetime.now() #update last login time
                 u.save()
 
                 # u.save()  # no user save needed! every thing comes from wechat user openid!
             request.session['login'] = True
-            request.session['openid'] = data.openid
+            request.session['openid'] = u.openid
             return HttpResponseRedirect(reverse('phodo:rate'))
         else:
             return HttpResponseRedirect(reverse('phodo:result'))
