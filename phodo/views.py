@@ -19,8 +19,8 @@ import PIL
 logger = logging.getLogger('django')
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
-WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
-WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/'
+WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid={0}&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'.format(nogit.wxTestAppID)
+WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'
 RANDOM = 4
 
 def auto_resize(picture):     #maybe this method is a wrong place!
@@ -68,21 +68,35 @@ class LoginView(View):
         if code == 'X':
             return render(request, 'result.html', {'success': False})
         else:
-            res = requests.get(WECHAT_AUTH_URL.join(code).join(
-                '&grant_type=authorization_code'))  # use wechat authorize api to fetch accesstoken, openid etc.
+            res = requests.get(WECHAT_AUTH_URL.format(nogit.wxTestAppID, nogit.wxTestAppSecret, code))  # use wechat authorize api to fetch accesstoken, openid etc.
             data = json.loads(res)
             if data.get('errcode', 0) == 0:
-                u = User(name=data.openid, openid=data.openid)
+                try:
+                    u = User.objects.get(openid=data.openid)
+                    u.last_login = datetime.datetime.now()
+                    logger.debug('update user {0}'.format(data.openid))
+                except:
+                    u = User()
+                    u.openid = data.openid
+                    u.name = data.openid
+                    logger.debug('new user {0}'.format(u.openid))
+                    u.last_login = datetime.datetime.now() #update last login time
+                    u.save()
+
                 # u.save()  # no user save needed! every thing comes from wechat user openid!
                 request.session['login'] = True
                 request.session['openid'] = data.openid
                 return HttpResponseRedirect(reverse('phodo:rate'))
+            else:
+                return HttpResponseRedirect(reverse('phodo:index'))
+
 
 class RateView(View):
     #this view is to render the pic1 and pic2 to be rated by clicking
     #this page can get: generate random (none input) or given picture id (p_id)
     def get(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
+        logger.debug('rate page at {0}'.format(str(datetime.datetime.now())))
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)   #redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html

@@ -25,7 +25,11 @@ SECRET_KEY = '1abz(g3#lw@53)lifkx4la^!im6+-uo-!fkt*i2%$=c+8wj1qy'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# CSRF_COOKIE_SECURE = True
+#
+# SESSION_COOKIE_SECURE = True
+
+ALLOWED_HOSTS = ['www.aishe.org.cn', 'aishe.org.cn', '*']
 
 
 # Application definition
@@ -41,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'park.apps.ParkConfig',
-    'rest_framework',
+    # 'rest_framework',
 ]
 
 MIDDLEWARE = [

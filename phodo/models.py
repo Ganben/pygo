@@ -22,7 +22,7 @@ def pic_name(instance, filename):   #this method must be def before class, other
 class User(models.Model):
 	openid = models.CharField(max_length=40)
 	domain = models.CharField(max_length=20, default='wechat')
-	last_login = models.DateTimeField()
+	last_login = models.DateTimeField(blank=True)
 	status = models.BooleanField(default=True)
 	created = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
