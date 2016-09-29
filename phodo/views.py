@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404
-from django.views import View
+from django.views import View, generic
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform, UploadForm, UploadForm2P, Rform2P
@@ -61,36 +61,38 @@ class IndexView(View):
             #r_id = 1 cancelled, let rate get auto generate # auto generate r_id, = photo id , its rating times, pull another picture to compare with it.
             return HttpResponseRedirect(reverse('phodo:rate'))
 
-class LoginView(View):
+# class LoginView(View):
     #this handle the redirected url from wechat;
-    def get(self, request, *args, **kwargs):
-        code = request.GET.get('CODE', 'X')  # path variable ?CODE=xxxxxxxx pass to code.
-        logger.debug('code {0} accepted'.format(code))
-        if code == 'X':
-            return render(request, 'result.html', {'success': False})
-        else:
-            res = requests.get(WECHAT_AUTH_URL.format(nogit.wxTestAppID, nogit.wxTestAppSecret, code))  # use wechat authorize api to fetch accesstoken, openid etc.
-            data = json.loads(res)
-            logger.debug('resp from wx {0}: {1}'.format(data.openid, str(data)))
-            if data.get('errcode', 0) == 0:
-                try:
-                    u = User_p.objects.get(openid=data.openid)
-                    u.last_login = datetime.datetime.now()
-                    logger.debug('update user {0}'.format(data.openid))
-                except:
-                    u = User_p()
-                    u.openid = data.openid
-                    u.name = data.openid
-                    logger.debug('new user {0}'.format(u.openid))
-                    u.last_login = datetime.datetime.now() #update last login time
-                    u.save()
+def login(request, wcde='1'):
+    logger.debug('--------------------============{0}===='.format(wcde))
+    code = request.GET.get('code', 'X')  # path variable ?CODE=xxxxxxxx pass to code.
+    logger.debug('==========================================================code {0} accepted'.format(code))
+    if code == 'X':
+        return render(request, 'result.html', {'success': False})
+    else:
+        res = requests.get(WECHAT_AUTH_URL.format(nogit.wxTestAppID, nogit.wxTestAppSecret, code))  # use wechat authorize api to fetch accesstoken, openid etc.
+        logger.debug('res plain: {0}'.format(str(res)))
+        data = json.loads(res)
+        logger.debug('resp from wx {0}: {1}'.format(data.openid, str(data)))
+        if data.get('errcode', 0) == 0:
+            try:
+                u = User_p.objects.get(openid=data.openid)
+                u.last_login = datetime.datetime.now()
+                logger.debug('update user {0}'.format(data.openid))
+            except:
+                u = User_p()
+                u.openid = data.openid
+                u.name = data.openid
+                logger.debug('new user {0}'.format(u.openid))
+                u.last_login = datetime.datetime.now() #update last login time
+                u.save()
 
                 # u.save()  # no user save needed! every thing comes from wechat user openid!
-                request.session['login'] = True
-                request.session['openid'] = data.openid
-                return HttpResponseRedirect(reverse('phodo:rate'))
-            else:
-                return HttpResponseRedirect(reverse('phodo:index'))
+            request.session['login'] = True
+            request.session['openid'] = data.openid
+            return HttpResponseRedirect(reverse('phodo:rate'))
+        else:
+            return HttpResponseRedirect(reverse('phodo:result'))
 
 
 class RateView(View):
