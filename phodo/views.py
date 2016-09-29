@@ -5,8 +5,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import Rform, UploadForm, UploadForm2P, Rform2P
 from .models import User, Pic, Tag
+from .config import nogit, makeimgurl
 import logging, datetime
 import random
+import oss2
 import math, requests, json
 from PIL import Image
 import PIL
@@ -14,12 +16,37 @@ import PIL
 # Create your views here.
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 #here define the wechat api parameters.
 #user and auth both use wechat pub xxx
 WECHAT_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx1d3cfcf816c87d8b&redirect_uri=https%3A%2F%2Fwww.aishe.org.cn%2Fphodo%2Flogin&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
 WECHAT_AUTH_URL = 'https://open.weixin.qq.com/connect/oauth2/'
 RANDOM = 4
+
+def auto_resize(picture):     #maybe this method is a wrong place!
+    p = Image.open(picture)
+    #get size
+    width, height = p.size
+    logger.debug('incomming a picture with %s with %s ' % p.size)
+    if width > height:
+        #return a resized picture, depends on its originally vertical or horizontal
+        ratio = 1600 / width
+        rh = int(height * ratio)
+        size = (1600, rh)
+        # return p.resize(size, PIL.Image.ANTIALIAS)
+        p1 = p.resize(size, PIL.Image.ANTIALIAS)
+        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
+        # p.save(fp)
+        return p1
+    else:
+        ratio = 1000 / height
+        rw = int( width * ratio)
+        size = (rw, 1000)
+        # return p.resize(size, PIL.Image.ANTIALIAS)
+        p1 = p.resize(size, PIL.Image.ANTIALIAS)
+        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
+        # p.save(fp)
+        return p1
 
 class IndexView(View):
     #this view is to do 1, redirect to auth page(commom method)
@@ -76,13 +103,13 @@ class RateView(View):
             formchoices = [
                 {
                     'value': pics[0].id,
-                    'url': pics[0].picture.path,
+                    'url': pics[0].picture,
                     'tag': pics[0].tag.name,
                     'id': 'id_choice_%s' % 0
                 },
                 {
                     'value': pics[1].id,
-                    'url': pics[1].picture.path,
+                    'url': pics[1].picture,
                     'tag': pics[1].tag.name,
                     'id': 'id_choice_%s' % 1
                 }
@@ -160,13 +187,13 @@ class PicRateView(View):
             formchoices = [
                 {
                     'value': pics[0].id,
-                    'url': pics[0].picture.url,
+                    'url': pics[0].picture,
                     'tag': pics[0].tag.name,
                     'id': 'id_choice_%s' % 0
                 },
                 {
                     'value': pics[1].id,
-                    'url': pics[1].picture.url,
+                    'url': pics[1].picture,
                     'tag': pics[1].tag.name,
                     'id': 'id_choice_%s' % 1
                 }
@@ -184,23 +211,34 @@ class PicRateView(View):
 class UploadView(View):
     # form_class = UploadForm()
     op_cache = {'key': 'value'} #is this a dict
+    op_q = []
     tags = Tag.objects.filter(active=True)
+    auth = oss2.Auth(nogit.AccessKeyID, nogit.AccessKeySecret)
+    service = oss2.Service(auth, nogit.OSSENDPOINT, connect_timeout=15)
+    bucket = oss2.Bucket(auth, nogit.OSSENDPOINT, nogit.BUCKET)
     def get(self, request, *args, **kwargs):
         openid = request.session.get('openid', None)
         logger.warning('welcome user %s' % openid)
         #lets make a choice field in upload form;
         # tags = Tag.objects.filter(active=True)
-
+        tags = Tag.objects.filter(active=True)
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)  # redirect to wechat authorize page. see http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
         o_id = random.randint(1, 300) #how long is this random? need review???
         self.op_cache[openid] = o_id #put the user and unique operation id to this dict, every post will chech the cache if this op is valide or duplicated
         #or use update: .update({openid: o_id})
-        id_form = UploadForm(self.tags)
+        id_form = UploadForm(tags=tags, initial={'o_id': o_id})
         logger.warning('return o_id = %s ' % o_id)
+        formchoice = []
+        #generate choice array
+        n = 0
+        for tg in tags:
+            formchoice.append({'value': tg.id, 'name': tg.name, 'id': 'id_choice_%s' % n })
+            n += 1
+
         # form_class.fields['o_id'] = random.randint()
-        return render(request, 'upload.html', {'form': id_form})
+        return render(request, 'upload.html', {'form': id_form, 'formchoice': formchoice})
 
     def post(self, request, *args, **kwargs):
         # form = UploadForm2post(self.tags)
@@ -208,7 +246,7 @@ class UploadView(View):
         if openid == None:
             return HttpResponseRedirect(
                 WECHAT_URL)
-
+        logger.debug('post uploaded triggered by {0}'.format(openid))
         uploaded = UploadForm2P(request.POST, request.FILES)
         if uploaded.is_valid():
             # openid = uploaded.cleaned_data['openid']
@@ -220,48 +258,79 @@ class UploadView(View):
                 pic = Pic()
                 # pic.user = uploaded.cleaned_data['openid'] #change with no user connect
                 pic.user = request.session.get('openid', 'anoymous')
-                pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate; replace by models save rewrite;
+                # pic.picture = uploaded.cleaned_data['picture'] #DONE size adjust, scale limit, tages auto generate; replace by models save rewrite;
                 # see source: http: // stackoverflow.com / questions / 24745857 / python - pillow - how - to - scale - an - image
                 # pic.picture = auto_resize(picture)  #must rewrite save method due to http://stackoverflow.com/questions/30434323/django-resize-image-before-upload
                 pic.text = uploaded.cleaned_data['text']
                 tag = uploaded.cleaned_data['choice']
-
                 pic.tag = get_object_or_404(Tag, pk=tag)
-                # pic.tag = 'default'
-                pic.save()
+                #no tag no permit
+                if not pic.tag.active == True:
+                    return render(request, 'rate.html')
+                #try upload to oss and return path
+                filebyte = makeimgurl.uploadImgHandler(request.FILES['picture'])
+                if not filebyte:
+                    logger.debug('=========================== wrong file byte ==============================')
+                    return render(request, 'result.html', {'success': False})
+                # resized = auto_resize(filebyte) #still not possible to use auto resize, must save to do it.
+                try:
 
-                request.session['uploaded'] = True
-                return render(request, 'result.html', {'success': True})
+                    o_id = random.randint(1, 10000)
+                    self.op_q.append(o_id)
+                    logger.debug('----------------------------------------------o_id generated: {0}'.format(o_id))
+                    pname = makeimgurl.imagename(request.FILES['picture'])
+                    logger.debug('----------------------------------------------see pname: {0}'.format(pname))
+                    result = self.bucket.put_object(pname, filebyte)
+                    logger.debug('----------------------------------------------oss result {0}'.format(result.status))
+                    print('http status: {0}'.format(result.status))
+                    print('request_id: {0}'.format(result.request_id))
+                    print('ETag: {0}'.format(result.etag))
+                    print('date: {0}'.format(result.headers['date']))
+
+                    pic.picture = 'http://{0}/{1}'.format(nogit.OSSEND2, pname)
+                # pic.tag = 'default'
+                    pic.save()
+                    request.session['uploaded'] = True
+                    picobj = {
+                        'url': pic.picture,
+                        'rating': pic.rating,
+                        'rated': pic.rated,
+                        'text': pic.text,
+                        'tag': pic.tag.name
+                    }
+
+                    return render(request, 'result.html', {'success': True, 'picture': picobj})
+                except:
+                    logger.debug('----------------------------------------------exception unknow here')
+                    return render(request, 'result.html', {'success': False})
+
             else:
                 return render(request, 'result.html', {'success': False})
         else:
-            return render(request, 'result.html', {'success': uploaded})
+            return render(request, 'result.html', {'success': False})
 
-def auto_resize(picture):     #maybe this method is a wrong place!
-    p = Image.open(picture)
-    #get size
-    width, height = p.size
-    logger.debug('incomming a picture with %s with %s ' % p.size)
-    if width > height:
-        #return a resized picture, depends on its originally vertical or horizontal
-        ratio = 1600 / width
-        rh = int(height * ratio)
-        size = (1600, rh)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg')
-        # p.save(fp)
-        return p1
-    else:
-        ratio = 1000 / height
-        rw = int( width * ratio)
-        size = (rw, 1000)
-        # return p.resize(size, PIL.Image.ANTIALIAS)
-        p1 = p.resize(size, PIL.Image.ANTIALIAS)
-        # fp = '{0}/{1}/{2}'.format(str(datetime.date.year), str(datetime.date.month), str(datetime.time)).join('.jpg') attemps to generate filepath
-        # p.save(fp)
-        return p1
+
 
 class ResultView(View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'result.html', {'success': True})
+        pk = request.GET.get('pic', False)
+        if pk:
+            pic = get_object_or_404(Pic, pk=pk)
+            picobj = {
+                'url': pic.picture,
+                'rating': pic.rating,
+                'rated': pic.rated,
+                'text': pic.text,
+                'tag': pic.tag.name
+            }
+            return render(request, 'result.html', {'mode': True, 'picture': picobj})
+        else:
+            pic = Pic.objects.all()[:1]
+            picobj = {
+                'url': pic[0].picture,
+                'rating': pic[0].rating,
+                'rated': pic[0].rated,
+                'text': pic[0].text,
+                'tag': pic[0].tag.name
+            }
+            return render(request, 'result.html', {'mode': True, 'picture': picobj})

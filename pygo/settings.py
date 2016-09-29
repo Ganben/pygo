@@ -142,3 +142,24 @@ MEDIA_ROOT = 'pictures'
 
 STATIC_URL = '/static/'
 # AUTH_USER_MODEL = 'cauth.Account'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        # 'file': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.FileHandler',
+        #     'filename': '/django/log/debug.log',
+        # },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

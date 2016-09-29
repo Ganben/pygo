@@ -41,7 +41,7 @@ class UploadForm(forms.Form):
      # choice = forms.ChoiceField()
      text = forms.CharField(label='Text', max_length=60)
      picture = forms.ImageField()
-     # o_id = forms.IntegerField(widget=forms.HiddenInput)
+     o_id = forms.IntegerField(widget=forms.HiddenInput)
      # openid = forms.CharField(widget=forms.HiddenInput)
 
 class UploadForm2P(forms.Form):

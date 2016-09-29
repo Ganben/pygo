@@ -43,7 +43,8 @@ class Pic(models.Model):
 	rated = models.IntegerField(default=0)
 	rating = models.IntegerField(default=1500)
 	# picture = models.ImageField(upload_to= 'pictures/%Y/%m')   #size limit is not permitted here.
-	picture = models.ImageField(upload_to=pic_name)
+	# picture = models.ImageField(upload_to=pic_name)
+	picture = models.URLField(max_length=80)
 	added = models.DateTimeField(auto_now_add=True)
 	text = models.CharField(max_length=60)
 	# tag = models.CharField(max_length=40, default=None)
