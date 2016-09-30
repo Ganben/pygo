@@ -31,9 +31,9 @@ def deletetxt(o_id):
 def uploadImgHandler(uplfile):
 	ext = uplfile.name.split('.')[-1]
 	size = uplfile.size
-	if ext == 'jpg':
-		if size <= 2508000:
+	if ext == 'jpg' or ext == 'jpeg':  #more extension needed;
+		if size <= 2508000:  #size seems enough
 			return uplfile.read()
 
-	logger.debug('file not jpg or too big')
+	logger.debug('file not jpg or too big ={0}, {1}'.format(size, ext))
 	return False
