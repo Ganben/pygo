@@ -138,13 +138,13 @@ class RateView(View):
             formchoices = [
                 {
                     'value': pics[0].id,
-                    'url': pics[0].picture,
+                    'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pics[0].picture),
                     'tag': pics[0].tag.name,
                     'id': 'id_choice_%s' % 0
                 },
                 {
                     'value': pics[1].id,
-                    'url': pics[1].picture,
+                    'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pics[1].picture),
                     'tag': pics[1].tag.name,
                     'id': 'id_choice_%s' % 1
                 }
@@ -182,20 +182,30 @@ class RateView(View):
             #calculate floating index k according to its total rated times;
             k1 = float(300/(5+pic1.rated) + 20)
             k2 = float(300/(5+pic2.rated) + 20)
+            r1 = math.pow(10, float(pic1.rating)/400)
+            r2 = math.pow(10, float(pic2.rating)/400)
+            e1 = r1/(r1+r2)
+            e2 = r2/(r1+r2)
+            logger.info('<<<<<<<<<<<<<<<<<pic1 {0} {1} pk pic2 {2} {3}'.format(id1, pic1.rating, id2, pic2.rating))
             win = form.cleaned_data['choice']
             #rated + 1 and update elo rating and save;
-            if win == id1:
+            if int(win) == int(id1):    #s1=1, s2=0
                 #1 wins ,update the both rating:
-                pic1.rating += int(k1*(1 - 1/(math.pow(10, float(pic2.rating - pic1.rating)/400) + 1)))
-                pic2.rating += int(k2*(0 - 1/(math.pow(10, float(pic1.rating - pic2.rating)/400) + 1)))
+                pic1.rating += int(k1*(1 - e1))
+                pic2.rating += int(k2*(0 - e2))
                 pic1.save()
                 pic2.save()
-            else:
-                delta = float(pic2.rating - pic1.rating)
-                pic1.rating += int(k1*(0 - 1/(math.pow(10,  delta/400) + 1)))
-                pic2.rating += int(k2*(1 - 1/(math.pow(10, -delta/400) + 1)))
+                logger.info('<<<<<<<<<<<<<<<<<<<<{0} win is {1}, this triggered, {2} {3}'.format(win, id1, pic1.rating, pic2.rating))
+
+            else: #s1=0, s2=1
+                pic1.rating += int(k1*(0 - e1))
+                pic2.rating += int(k2*(1 - e2))
+                # delta = float(pic2.rating - pic1.rating)
+                # pic1.rating += int(k1*(0 - 1/(math.pow(10,  delta/400) + 1)))
+                # pic2.rating += int(k2*(1 - 1/(math.pow(10, -delta/400) + 1)))
                 pic1.save()
                 pic2.save()
+            logger.info('<<<<<<<<<<<<<<{0} wins, new rating: {1} {2}'.format(win, pic1.rating, pic2.rating))
             return render(request, 'result.html', {'success': True})
 
 class PicRateView(View):
@@ -220,13 +230,13 @@ class PicRateView(View):
             formchoices = [
                 {
                     'value': pics[0].id,
-                    'url': pics[0].picture,
+                    'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pics[0].picture),
                     'tag': pics[0].tag.name,
                     'id': 'id_choice_%s' % 0
                 },
                 {
                     'value': pics[1].id,
-                    'url': pics[1].picture,
+                    'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pics[1].picture),
                     'tag': pics[1].tag.name,
                     'id': 'id_choice_%s' % 1
                 }
@@ -318,12 +328,13 @@ class UploadView(View):
                     print('ETag: {0}'.format(result.etag))
                     print('date: {0}'.format(result.headers['date']))
 
-                    pic.picture = 'http://{0}/{1}'.format(nogit.OSSEND2, pname)
-                # pic.tag = 'default'
+                    # pic.picture = 'http://{0}/{1}'.format(nogit.OSSEND2, pname) #here we use short path, in returning must update full path
+                    pic.picture = pname
+
                     pic.save()
                     request.session['uploaded'] = True
                     picobj = {
-                        'url': pic.picture,
+                        'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pic.picture),
                         'rating': pic.rating,
                         'rated': pic.rated,
                         'text': pic.text,
@@ -348,7 +359,7 @@ class ResultView(View):
         if pk:
             pic = get_object_or_404(Pic, pk=pk)
             picobj = {
-                'url': pic.picture,
+                'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pic.picture),
                 'rating': pic.rating,
                 'rated': pic.rated,
                 'text': pic.text,
@@ -358,7 +369,7 @@ class ResultView(View):
         else:
             pic = Pic.objects.all()[:1]
             picobj = {
-                'url': pic[0].picture,
+                'url': 'http://{0}/{1}'.format(nogit.OSSEND2, pic[0].picture),
                 'rating': pic[0].rating,
                 'rated': pic[0].rated,
                 'text': pic[0].text,
