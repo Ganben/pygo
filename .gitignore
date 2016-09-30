@@ -5,6 +5,7 @@ __pycache__/
 *.sqlite3
 pictures/
 
+*.swp
 nogit.*
 # C extensions
 *.so
