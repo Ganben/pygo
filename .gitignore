@@ -7,6 +7,9 @@ pictures/
 
 *.swp
 nogit.*
+# yarn package
+*.lock
+node_modules/
 # C extensions
 *.so
 .idea/
