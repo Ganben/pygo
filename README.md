@@ -28,4 +28,8 @@ OSSEND2 #binded oss domain name
 wxTestAppID # test app id for wx
 wxTestAppSecret # test app secret for wx
 wxProdAppID # prod app id for wx
+B
+# adding some integration with mongodb and mysql
+
+TODO
 wxProdAppSecret # prod app secret for wx
